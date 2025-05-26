@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="author" content="Dương Lê">
+  <title>Work Management</title>
+  <style>
+    html, body {
+    height: 100%;
+    margin: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;   
+      background-image: url('image/MeMay.jpg');
+      background-size: cover;          
+      background-repeat: no-repeat;    
+      background-position: center;
+      background-attachment: fixed;
+      padding: 20px;
+
+    }
+    body{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;  
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: rgb(213, 235, 235);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .task-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: none;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #task-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    #task-list li {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-text {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .task-text.completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .delete-btn {
+      background-color: rgb(76, 29, 193);
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      margin-left: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: darkred;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Work Management</h1>
+    <div class="task-input">
+      <input type="text" id="new-task" placeholder="Add job hereeeee" />
+      <button id="add-task">Add Job</button>
+    </div>
+    <div style="margin-bottom: 15px; text-align: center;">
+        <button class="filter-btn" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Incomplete</button>
+        <button class="filter-btn" data-filter="completed">Complete</button>
+    </div>
+    <ul id="task-list"> </ul>
+  </div>
+
+<script>
+  let tasks = [];
+
+  function saveTasksToLocalStorage() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function loadTasksFromLocalStorage() {
+    const storedTasks = localStorage.getItem("tasks");
+    if (storedTasks) {
+      tasks = JSON.parse(storedTasks);
+    }
+  }
+
+  function addTask() {
+    const taskInput = document.getElementById("new-task");
+    const taskText = taskInput.value.trim();
+
+    if (taskText === "") {
+      alert("ERRORRRRRRRRRRRRRRRRRRRRRR!!!!!!!!!");
+      return;
+    }
+
+    const task = {
+      id: Date.now(),
+      text: taskText,
+      isDone: false
+    };
+
+    tasks.push(task);
+    saveTasksToLocalStorage();
+    renderTasks();
+    taskInput.value = "";
+    taskInput.focus();
+  }
+
+  function renderTasks(filter = "all") {
+    const taskList = document.getElementById("task-list");
+    taskList.innerHTML = "";
+
+    let filteredTasks = tasks;
+    if (filter === "completed") {
+      filteredTasks = tasks.filter(t => t.isDone);
+    } else if (filter === "active") {
+      filteredTasks = tasks.filter(t => !t.isDone);
+    }
+
+    filteredTasks.forEach(task => {
+      const li = document.createElement("li");
+
+      const span = document.createElement("span");
+      span.textContent = task.text;
+      span.className = "task-text";
+      if (task.isDone) span.classList.add("completed");
+
+      span.addEventListener("click", () => {
+        task.isDone = !task.isDone;
+        saveTasksToLocalStorage();
+        renderTasks(currentFilter);
+      });
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "delete-btn";
+      deleteBtn.addEventListener("click", () => {
+        tasks = tasks.filter(t => t.id !== task.id);
+        saveTasksToLocalStorage();
+        renderTasks(currentFilter);
+      });
+
+      li.appendChild(span);
+      li.appendChild(deleteBtn);
+      taskList.appendChild(li);
+    });
+  }
+
+  // Bộ lọc
+  let currentFilter = "all";
+  function setupFilters() {
+    const filters = document.querySelectorAll(".filter-btn");
+    filters.forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentFilter = btn.dataset.filter;
+        renderTasks(currentFilter);
+      });
+    });
+  }
+
+  document.getElementById("add-task").addEventListener("click", addTask);
+  document.getElementById("new-task").addEventListener("keyup", function (e) {
+    if (e.key === "Enter") {
+      addTask();
+    }
+  });
+
+  loadTasksFromLocalStorage();
+  renderTasks();
+  setupFilters();
+</script>
+
+</body>
+</html>
